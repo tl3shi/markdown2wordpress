@@ -1,3 +1,12 @@
+-------------
+title: 给手机主题插件Wptouch绑定单独的域名
+permalink: binding-domain-to-plugin-of-mobile-theme
+layout: post
+tags: 我做站长, wptouch, wordpress, plugin,
+categories: 经验技巧/我做站长
+published: false
+-------------
+
 ## wordpress 绑定m.tanglei.name 访问此 都以wptouch主题访问。 
 
 最终解决方案： 手动设置UA，让wptouch后台添加设置的UA能够match后切换。相关联系太多，不能直接设置```is_mobile_device```为```true```或者直接```$this->is_supported_device()```返回```true```。
