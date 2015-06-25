@@ -13,10 +13,42 @@ def initClient():
     userid = config.get('wordpress', 'userid')
     return Client(xmlrpc_url, username, config.get('wordpress', 'password'))
 
+def parseDocument(filename):
+    lines = open(filename, 'r').readlines()
+    values = {'title':'', 'permalink':'', 'layout':'post', 'tags':'', 'categories':'default', 'published':False}
+    start = False
+    config = False
+    for i in range(len(lines)):
+        line = lines[i]
+        if !config:
+            if line.starts('---'):
+                if (start == False):
+                    start = True
+                else: # end
+                    if (values['title'] == '' or values['permalink'] == ''):
+                        printf('title and permalink should not be null'); exit()
+                    else:# config ok 
+                        config = True
+            else:
+                try:
+                    key = line[:line.find(':')]
+                    value = line[line.find(':'):]
+                    values[key] = value
+                except:
+                    printf('config failed! (key, value) = (' + key + ', ' + value + ')');exit()
+        else: #config ok
+            rawcontent = lines[i:]
+            rawfilename = filename + '.raw'
+            open(rawfilename, 'w').writelines(rawcontent)
+            post = WordPressPost()
+            post.title = values['title']
+            post.link = values['permalink']
+            post.content = pandocTool.md2html(rawfilename)
+            post.post_type = values['layout']
+            post.post_status = values['published'] ? 'publish' : ''
+            return post
+
 client = initClient()
-post = WordPressPost()
-post.title = 'My post2'
-post.content = pandocTool.md2html('test.md')
 #post.id = client.call(posts.NewPost(post))
 post.id = 2659
 client.call(posts.EditPost(post.id, post))
