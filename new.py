@@ -2,6 +2,7 @@ from wordpress_xmlrpc import WordPressPost
 from wordpress_xmlrpc import Client
 from wordpress_xmlrpc.methods import posts
 from wordpress_xmlrpc.compat import ConfigParser
+from wordpress_xmlrpc.methods.users import GetUserInfo
 import pandocTool
 
 def initClient():
@@ -20,8 +21,8 @@ def parseDocument(filename):
     config = False
     for i in range(len(lines)):
         line = lines[i]
-        if !config:
-            if line.starts('---'):
+        if config == False:
+            if line.startswith('---'):
                 if (start == False):
                     start = True
                 else: # end
@@ -32,28 +33,49 @@ def parseDocument(filename):
             else:
                 try:
                     key = line[:line.find(':')]
-                    value = line[line.find(':'):]
-                    values[key] = value
+                    value = line[line.find(':')+1:]
+                    values[key] = value.strip()
                 except:
                     printf('config failed! (key, value) = (' + key + ', ' + value + ')');exit()
         else: #config ok
             rawcontent = lines[i:]
-            rawfilename = filename + '.raw'
+            rawfilename = filename + '.raw.md'
             open(rawfilename, 'w').writelines(rawcontent)
             post = WordPressPost()
             post.title = values['title']
-            post.link = values['permalink']
+            post.slug = values['permalink']
             post.content = pandocTool.md2html(rawfilename)
             post.post_type = values['layout']
-            post.post_status = values['published'] ? 'publish' : ''
+            post.post_status = 'publish' if values['published'] == True else 'draft'
+            post.comment_status = 'open' #default
+            post.pint_status = 'open' #default
             return post
 
-client = initClient()
-#post.id = client.call(posts.NewPost(post))
-post.id = 2659
-client.call(posts.EditPost(post.id, post))
+def testConnection():
+    client = initClient()
+    print client.call(GetUserInfo())
 
+def testNew():
+    client = initClient()
+    post = WordPressPost()
+    post.title = 'My new title'
+    post.content = 'This is the body of my new post.'
+    print client.call(posts.NewPost(post))
+
+def testUpdate(pid):
+    client = initClient()
+    post = WordPressPost()
+    post.title = 'My new title update 2'
+    post.content = 'This is the body of my new post.'
+    post.slug= 'helloword'
+    post.post_type = 'post'
+    post.post_status = 'draft'
+    print client.call(posts.EditPost(pid, post))
+
+#testUpdate(2669)
+post = parseDocument('test.md')
+# post.id = 2659
 # post.post_status = 'publish'
-print client.call(posts.EditPost(post.id, post))
-print post.id
-
+client = initClient()
+#print client.call(posts.EditPost(2669, testReturnPost() ))
+print client.call(posts.EditPost(2669, post))
