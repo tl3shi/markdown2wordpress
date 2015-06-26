@@ -1,3 +1,4 @@
+#coding utf-8
 from wordpress_xmlrpc import WordPressPost
 from wordpress_xmlrpc import Client
 from wordpress_xmlrpc.methods import posts, media
@@ -5,15 +6,34 @@ from wordpress_xmlrpc.compat import ConfigParser, xmlrpc_client
 from wordpress_xmlrpc.methods.users import GetUserInfo
 import pandocTool
 import mimetypes
+import re
 
-def initClient():
+def readConfig():
     config = ConfigParser()
     with open('wp-config.cfg', 'r') as f:
         config.readfp(f)
+    return config
+
+def initClient():
+    config = readConfig()
     xmlrpc_url = config.get('wordpress', 'url')
     username = config.get('wordpress', 'username')
     userid = config.get('wordpress', 'userid')
     return Client(xmlrpc_url, username, config.get('wordpress', 'password'))
+
+def parseMedia(lines):
+    config = readConfig()
+    resourcePrefix = config.get('resource', 'picGithubPrefix')
+    reImg = r'!\[[^\\\\]*\]\(\./[^\\\\]*\)'
+    reFile= r'\(\.\/[^\\\\]*\)'
+    content = []
+    for line in lines:
+        matches = re.findall(reImg, line)
+        for pic in matches:
+            filename = re.findall(reFile, pic)[0]
+            line = line.replace(filename, '(' + resourcePrefix + filename[2:-1] + ')')
+        content.append(line)
+    return content
 
 def parseDocument(filename):
     lines = open(filename, 'r').readlines()
@@ -39,7 +59,7 @@ def parseDocument(filename):
                 except:
                     printf('config failed! (key, value) = (' + key + ', ' + value + ')');exit()
         else: #config ok
-            rawcontent = lines[i:]
+            rawcontent = parseMedia(lines[i:])
             rawfilename = filename + '.raw.md'
             open(rawfilename, 'w').writelines(rawcontent)
             post = WordPressPost()
@@ -84,9 +104,9 @@ def testUpdate(pid):
     print client.call(posts.EditPost(pid, post))
 
 #testUpdate(2669)
-post = parseDocument('test.md')
+post = parseDocument('posts/binding-domain-to-plugin-of-mobile-theme.md')
 # post.id = 2659
 # post.post_status = 'publish'
 client = initClient()
 #print client.call(posts.EditPost(2669, testReturnPost() ))
-print client.call(posts.EditPost(2669, post))
+print client.call(posts.EditPost(2659, post))
