@@ -1,3 +1,11 @@
+---------------
+title: 给手机主题插件Wptouch绑定单独的域名
+permalink: binding-domain-to-plugin-of-mobile-theme
+layout: post
+tags: 我做站长, wptouch, wordpress, plugin,
+categories: 经验技巧/我做站长
+published: false
+-------------
 
 目标是使得在wordpress站点中，绑定域名[m.tanglei.name](m.tanglei.name),通过此域名访问wordpress站点时都以wptouch主题访问。 
 
@@ -26,4 +34,4 @@ define('WP_SITEURL', $tangleisiteurl);
 ```
 对SEO不太好～管他呢～
 
-效果如下![m.tanglei.name](./m.tanglei.name.preview.png)
+效果如下![m.tanglei.name](./binding-domain-to-plugin-of-mobile-theme/m.tanglei.name.preview.png)

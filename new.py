@@ -1,9 +1,10 @@
 from wordpress_xmlrpc import WordPressPost
 from wordpress_xmlrpc import Client
-from wordpress_xmlrpc.methods import posts
-from wordpress_xmlrpc.compat import ConfigParser
+from wordpress_xmlrpc.methods import posts, media
+from wordpress_xmlrpc.compat import ConfigParser, xmlrpc_client
 from wordpress_xmlrpc.methods.users import GetUserInfo
 import pandocTool
+import mimetypes
 
 def initClient():
     config = ConfigParser()
@@ -50,6 +51,16 @@ def parseDocument(filename):
             post.comment_status = 'open' #default
             post.pint_status = 'open' #default
             return post
+
+def uploadFile(client, filename): # failed
+    data = {}
+    data['type'] = mimetypes.read_mime_types(filename)
+    data['name'] = filename
+    with open(filename, 'rb') as img:
+        data['bits'] = xmlrpc_client.Binary(img.read())
+    print data
+    resp = client.call(media.UploadFile(data))
+    return resp
 
 def testConnection():
     client = initClient()
