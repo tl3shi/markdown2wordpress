@@ -9,3 +9,9 @@ markdown2wordpress
     - 所以的post存在的图片等每次多重新上传这个可以做到，但如果是更新的话会存在很多冗余
 
 ---> 图片使用github 外链的形式
+
+
+TODO
+
+- tag
+- category

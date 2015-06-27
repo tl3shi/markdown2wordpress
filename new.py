@@ -1,7 +1,7 @@
-#coding utf-8
+# coding=utf8
 from wordpress_xmlrpc import WordPressPost
 from wordpress_xmlrpc import Client
-from wordpress_xmlrpc.methods import posts, media
+from wordpress_xmlrpc.methods import posts, media, taxonomies
 from wordpress_xmlrpc.compat import ConfigParser, xmlrpc_client
 from wordpress_xmlrpc.methods.users import GetUserInfo
 import pandocTool
@@ -70,15 +70,21 @@ def parseDocument(filename):
             post.post_status = 'publish' if values['published'] == True else 'draft'
             post.comment_status = 'open' #default
             post.pint_status = 'open' #default
+            post.terms_names = {}
+            values['tags'] = values['tags'].replace('，', ',')
+            values['categories'] = values['categories'].replace('，', ',')
+            if len(values['tags']) > 0:
+                post.terms_names['post_tag'] = [ tag.strip() for tag in values['tags'].split(',') if len(tag) > 0] 
+            if len(values['categories']) > 0:
+                post.terms_names['category'] = [ cate.strip() for cate in values['categories'].split(',') if len(cate) > 0] 
             return post
 
-def uploadFile(client, filename): # failed
+def uploadFile(client, filename):
     data = {}
-    data['type'] = mimetypes.guess_type(filename)[0] #mimetypes.read_mime_types(filename)
+    data['type'] = mimetypes.guess_type(filename)[0] 
     data['name'] = filename
     with open(filename, 'rb') as img:
         data['bits'] = xmlrpc_client.Binary(img.read())
-    print data
     resp = client.call(media.UploadFile(data))
     return resp
 
@@ -102,6 +108,11 @@ def testUpdate(pid):
     post.post_type = 'post'
     post.post_status = 'draft'
     print client.call(posts.EditPost(pid, post))
+
+def testTerm(client):
+    categories = client.call(taxonomies.GetTerms('category'))
+    #decode may have problem when chinese
+    print categories
 
 #testUpdate(2669)
 post = parseDocument('posts/binding-domain-to-plugin-of-mobile-theme.md')

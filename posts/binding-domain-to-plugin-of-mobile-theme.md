@@ -2,8 +2,8 @@
 title: 给手机主题插件Wptouch绑定单独的域名
 permalink: binding-domain-to-plugin-of-mobile-theme
 layout: post
-tags: 经验技巧, wptouch, wordpress, plugin,
-categories: 经验技巧/我做站长, 经验技巧/wordpress
+tags: 经验技巧, wptouch, wordpress, plugin
+categories: 经验技巧, 我做站长, wordpress
 published: false
 -------------
 
