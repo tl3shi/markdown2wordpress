@@ -74,7 +74,7 @@ def parseDocument(filename):
 
 def uploadFile(client, filename): # failed
     data = {}
-    data['type'] = mimetypes.read_mime_types(filename)
+    data['type'] = mimetypes.guess_type(filename)[0] #mimetypes.read_mime_types(filename)
     data['name'] = filename
     with open(filename, 'rb') as img:
         data['bits'] = xmlrpc_client.Binary(img.read())
