@@ -92,6 +92,9 @@ def newPost(filename):
 def editPost(filename, post_id):
     post = parseDocument(filename)
     client = initClient()
+    oldRawFilename = filename[:-3] + '.raw.id-'
+    newRawFilename = filename[:-3] + '.raw.id-' + str(post_id)
+    os.rename(oldRawFilename, newRawFilename)
     return client.call(posts.EditPost(post_id, post))
 
 def uploadFile(client, filename):
@@ -167,18 +170,23 @@ def main(argv):
     if operation not in ('new', 'update'):
         print 'The operation "' + operation + '" not supported, current support operations are: "new", "update" !'
         exit()
+    
+    (postdir, basefilename) = os.path.split(filename)
+    rawFilename = ''
+    for f in os.listdir(postdir):
+        if f.startswith(basefilename[:-3]) and len(f) > len(basefilename)+len('.raw.id-')-3:
+            rawFilename = postdir + os.path.sep + f
+            break
+    
     if operation == 'new':
+        if rawFilename != '':
+            print 'The post with same filename has exsisted, make sure the operation is "new" or "update" ? ' + filename
+            exit()
         if newPost(filename):
             print 'Post new successfully !\n'
         else:
             print 'Post failed !\n'
     elif operation == 'update':
-        (postdir, basefilename) = os.path.split(filename)
-        rawFilename = ''
-        for f in os.listdir(postdir):
-            if f.startswith(basefilename[:-3]) and len(f) > len(basefilename)+len('.raw.id-')-3:
-                rawFilename = postdir + os.path.sep + f
-                break
         if rawFilename == '':
             print 'make sure the corresponding rawfile exists! \n'
             exit()
