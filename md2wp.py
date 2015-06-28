@@ -7,6 +7,7 @@ from wordpress_xmlrpc.methods.users import GetUserInfo
 import pandocTool
 import mimetypes
 import re
+import os, sys, getopt
 
 def readConfig():
     config = ConfigParser()
@@ -37,7 +38,7 @@ def parseMedia(lines):
 
 def parseDocument(filename):
     lines = open(filename, 'r').readlines()
-    values = {'title':'', 'permalink':'', 'layout':'post', 'tags':'', 'categories':'default', 'published':False}
+    values = {'title':'', 'permalink':'', 'layout':'post', 'tags':'', 'categories':'default', 'published': 'false'}
     start = False
     config = False
     for i in range(len(lines)):
@@ -48,7 +49,7 @@ def parseDocument(filename):
                     start = True
                 else: # end
                     if (values['title'] == '' or values['permalink'] == ''):
-                        printf('title and permalink should not be null'); exit()
+                        printf('title and permalink should not be null!\n'); exit()
                     else:# config ok 
                         config = True
             else:
@@ -57,17 +58,17 @@ def parseDocument(filename):
                     value = line[line.find(':')+1:]
                     values[key] = value.strip()
                 except:
-                    printf('config failed! (key, value) = (' + key + ', ' + value + ')');exit()
+                    printf('config failed! (key, value) = (' + key + ', ' + value + ')\n');exit()
         else: #config ok
             rawcontent = parseMedia(lines[i:])
-            rawfilename = filename + '.raw.md'
+            rawfilename = filename[:-3] + '.raw.id-'
             open(rawfilename, 'w').writelines(rawcontent)
             post = WordPressPost()
             post.title = values['title']
             post.slug = values['permalink']
             post.content = pandocTool.md2html(rawfilename)
             post.post_type = values['layout']
-            post.post_status = 'publish' if values['published'] == True else 'draft'
+            post.post_status = 'publish' if values['published'].lower() == 'true' else 'draft'
             post.comment_status = 'open' #default
             post.pint_status = 'open' #default
             post.terms_names = {}
@@ -78,6 +79,20 @@ def parseDocument(filename):
             if len(values['categories']) > 0:
                 post.terms_names['category'] = [ cate.strip() for cate in values['categories'].split(',') if len(cate) > 0] 
             return post
+
+def newPost(filename):
+    post = parseDocument(filename)
+    client = initClient()
+    post.id = client.call(posts.NewPost(post))
+    oldRawFilename = filename[:-3] + '.raw.id-'
+    newRawFilename = filename[:-3] + '.raw.id-' + str(post.id)
+    os.rename(oldRawFilename, newRawFilename)
+    return post.id > 0
+
+def editPost(filename, post_id):
+    post = parseDocument(filename)
+    client = initClient()
+    return client.call(posts.EditPost(post_id, post))
 
 def uploadFile(client, filename):
     data = {}
@@ -114,10 +129,70 @@ def testTerm(client):
     #decode may have problem when chinese
     print categories
 
-#testUpdate(2669)
-post = parseDocument('posts/binding-domain-to-plugin-of-mobile-theme.md')
-# post.id = 2659
-# post.post_status = 'publish'
-client = initClient()
-#print client.call(posts.EditPost(2669, testReturnPost() ))
-print client.call(posts.EditPost(2659, post))
+def testEdit():
+    #testUpdate(2669)
+    post = parseDocument('posts/binding-domain-to-plugin-of-mobile-theme.md')
+    # post.id = 2659
+    # post.post_status = 'publish'
+    client = initClient()
+    #print client.call(posts.EditPost(2669, testReturnPost() ))
+    print client.call(posts.EditPost(2659, post))
+
+def help():
+    print 'useage:\n' + 'md2wp.py' + ' -f <postfilename> -o <operation>' + '\t or'
+    print               'md2wp.py' + ' --file=<postfilename> --operation=<operation>'
+
+def main(argv):
+    filename = ''
+    operation = ''
+    try:
+        opts, args = getopt.getopt(argv[1:], 'hf:o:', ['help', 'file=', 'operation='])
+        if len(opts) < 2 :
+            help()
+            exit()
+    except getopt.GetoptError:
+        help()
+        exit()
+    for opt, arg in opts:
+        if opt in ('-h', '--help'):
+            help()
+            exit()
+        elif opt in ('-f', '--file'):
+            filename = arg
+        elif opt in ('-o', '--operation'):
+            operation = arg
+    if not os.path.exists(filename):
+        print 'make sure the input file exists! ' + filename
+        exit()
+    if operation not in ('new', 'update'):
+        print 'The operation "' + operation + '" not supported, current support operations are: "new", "update" !'
+        exit()
+    if operation == 'new':
+        if newPost(filename):
+            print 'Post new successfully !\n'
+        else:
+            print 'Post failed !\n'
+    elif operation == 'update':
+        (postdir, basefilename) = os.path.split(filename)
+        rawFilename = ''
+        for f in os.listdir(postdir):
+            if f.startswith(basefilename[:-3]) and len(f) > len(basefilename)+len('.raw.id-')-3:
+                rawFilename = postdir + os.path.sep + f
+                break
+        if rawFilename == '':
+            print 'make sure the corresponding rawfile exists! \n'
+            exit()
+        post_id = rawFilename[rawFilename.find('.raw.id-')+len('.raw.id-'):]
+        if not post_id.isdigit():
+            print 'make sure the corresponding rawfile exists! \n'
+            exit()
+        if editPost(filename, post_id):
+            print 'Update successfully !\n'
+        else:
+            print 'Update failed !\n'
+        
+if __name__ == '__main__':
+    if len(sys.argv) <= 1:
+        print 'command error! try ' + sys.argv[0] + ' -help\n'
+        exit()
+    main(sys.argv)

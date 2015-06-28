@@ -4,7 +4,7 @@ permalink: binding-domain-to-plugin-of-mobile-theme
 layout: post
 tags: 经验技巧, wptouch, wordpress, plugin
 categories: 经验技巧, 我做站长, wordpress
-published: false
+published: True
 -------------
 
 目标是使得在wordpress站点中，绑定域名[m.tanglei.name](m.tanglei.name),通过此域名访问wordpress站点时都以wptouch主题访问。 
