@@ -1,0 +1,63 @@
+<html>
+<head>
+    <!-- 
+    <link rel="stylesheet" href="./highlight.default.min.css">
+    <script src="./highlight.min.js"></script>
+    -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"></script>
+    <script src="./jquery-2.1.4.min.js"></script>
+    <script>
+        //hljs.initHighlightingOnLoad();
+        $(document).ready(function() {
+            hljs.configure({useBR: true});//this does NOT work, the original code should contains <br>, see https://github.com/isagalaev/highlight.js/issues/860
+            //var codestr = $('cc').html();
+            //$('cc').html(codestr.replace(/\n/g, '<br>')); //manually substitute
+            $('cc').each(function(){
+                var codestr = $(this).html();
+                $(this).html(codestr.replace(/\n/g, '<br>')); //manually substitute
+            });
+            $('cc').each(function(i, block) {
+                hljs.highlightBlock(block);
+            });
+        });
+    </script>
+</head>
+<body>
+    test
+    <cc lang="php">
+    $domain = $_SERVER['HTTP_HOST'];
+    if ($domain == 'm.tanglei.name')
+         $_SERVER['HTTP_USER_AGENT']='tanglei'; //跟wptouch admin后台设置的一样即可
+    </cc>
+    test2s
+    <cc lang="python">
+    '''
+    Created on Mar 9, 2012
+    @author: tanglei|www.tanglei.name
+    '''
+    import traceback
+    class A(object):
+        def __new__(self):
+            print("new  A,has not return")
+        def __init__(self):
+            print("init in A")
+        def cal(self,num):
+            print(num+1)
+    try: #if not try ,catch,the program will terminate
+        t=A()
+        t.cal(89)
+    except :
+        traceback.print_exc()
+    </cc>
+    
+    the default configuration should not work.
+    <pre>
+    <code class="php">
+    $domain = $_SERVER['HTTP_HOST'];
+    if ($domain == 'm.tanglei.name')
+         $_SERVER['HTTP_USER_AGENT']='tanglei'; //跟wptouch admin后台设置的一样即可
+    <code>
+    </pre>
+<body>
+</html>
