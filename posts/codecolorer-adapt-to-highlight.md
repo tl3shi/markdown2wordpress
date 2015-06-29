@@ -1,2 +1,0 @@
-
-将代码高亮插件codecolorer替换为highlight

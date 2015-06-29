@@ -8,14 +8,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"></script>
     <script src="./jquery-2.1.4.min.js"></script>
     <script>
-        //hljs.initHighlightingOnLoad();
+        if(false)
+            hljs.initHighlightingOnLoad(); //default tag><pre><code>
+        else
         $(document).ready(function() {
-            hljs.configure({useBR: true});//this does NOT work, the original code should contains <br>, see https://github.com/isagalaev/highlight.js/issues/860
-            //var codestr = $('cc').html();
-            //$('cc').html(codestr.replace(/\n/g, '<br>')); //manually substitute
+            //hljs.configure({useBR: true});//this does NOT work, the original code should contains <br>, see https://github.com/isagalaev/highlight.js/issues/860
             $('cc').each(function(){
-                var codestr = $(this).html();
-                $(this).html(codestr.replace(/\n/g, '<br>')); //manually substitute
+                $(this).wrap("<pre></pre>");
+                //var codestr = $(this).html();
+                //$(this).html(codestr.replace(/\n/g, '<br>')); //manually substitute, add <pre>, no need
             });
             $('cc').each(function(i, block) {
                 hljs.highlightBlock(block);
@@ -24,13 +25,13 @@
     </script>
 </head>
 <body>
-    test
+    test0
     <cc lang="php">
     $domain = $_SERVER['HTTP_HOST'];
     if ($domain == 'm.tanglei.name')
          $_SERVER['HTTP_USER_AGENT']='tanglei'; //跟wptouch admin后台设置的一样即可
     </cc>
-    test2s
+    test1
     <cc lang="python">
     '''
     Created on Mar 9, 2012

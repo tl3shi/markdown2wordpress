@@ -1,11 +1,11 @@
----------------
+---
 title: 给手机主题插件Wptouch绑定单独的域名
 permalink: binding-domain-to-plugin-of-mobile-theme
 layout: post
-tags: 经验技巧, wptouch, wordpress, plugin
-categories: 经验技巧, 我做站长, wordpress
+tags: 经验技巧 wptouch wordpress plugin
+categories: 经验技巧 我做站长 wordpress
 published: True
--------------
+---
 
 目标是使得在wordpress站点中，绑定域名[m.tanglei.name](m.tanglei.name),通过此域名访问wordpress站点时都以wptouch主题访问。 
 
@@ -23,6 +23,7 @@ if ($domain == 'm.tanglei.name')
 
 首页解决了～ 还得改首页上的链接～ 这些链接都是www打头的～ 
 vim wp-config.php 添加如下设置，成功后 WP后台设置-常规中wordpress地址和站点地址不可编辑。
+//```{.php .numberLines} Attention 这个jekyll不支持
 
 ```{.php .numberLines}
 //multiple domain set tanglei begin

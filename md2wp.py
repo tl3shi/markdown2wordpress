@@ -44,7 +44,7 @@ def parseDocument(filename):
     for i in range(len(lines)):
         line = lines[i]
         if config == False:
-            if line.startswith('---'):
+            if line == '---':
                 if (start == False):
                     start = True
                 else: # end
@@ -60,6 +60,8 @@ def parseDocument(filename):
                 except:
                     printf('config failed! (key, value) = (' + key + ', ' + value + ')\n');exit()
         else: #config ok
+            while len(lines[i]) <= 1: #filter first blank lines
+                i++
             rawcontent = parseMedia(lines[i:])
             rawfilename = filename[:-3] + '.raw.id-'
             open(rawfilename, 'w').writelines(rawcontent)
@@ -72,12 +74,12 @@ def parseDocument(filename):
             post.comment_status = 'open' #default
             post.pint_status = 'open' #default
             post.terms_names = {}
-            values['tags'] = values['tags'].replace('，', ',')
-            values['categories'] = values['categories'].replace('，', ',')
+            #values['tags'] = values['tags'].replace('，', ',') compatible with jekyll, use blank
+            #values['categories'] = values['categories'].replace('，', ',')
             if len(values['tags']) > 0:
-                post.terms_names['post_tag'] = [ tag.strip() for tag in values['tags'].split(',') if len(tag) > 0] 
+                post.terms_names['post_tag'] = [ tag.strip() for tag in values['tags'].split() if len(tag) > 0] 
             if len(values['categories']) > 0:
-                post.terms_names['category'] = [ cate.strip() for cate in values['categories'].split(',') if len(cate) > 0] 
+                post.terms_names['category'] = [ cate.strip() for cate in values['categories'].split() if len(cate) > 0] 
             return post
 
 def newPost(filename):
