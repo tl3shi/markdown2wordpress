@@ -108,6 +108,20 @@ def uploadFile(client, filename):
     resp = client.call(media.UploadFile(data))
     return resp
 
+def newTemplate(postdir, basename):
+    template = '''
+---
+title: 题目
+permalink: url
+layout: post
+tags: tag1 
+categories: default
+published: false
+---
+'''
+    template = template.replace('url', basename[:-3])
+    open( postdir + os.path.sep + basename, 'w').writelines(template[1:])
+
 def testConnection():
     client = initClient()
     print client.call(GetUserInfo())
@@ -152,9 +166,6 @@ def main(argv):
     operation = ''
     try:
         opts, args = getopt.getopt(argv[1:], 'hf:o:', ['help', 'file=', 'operation='])
-        if len(opts) < 2 :
-            help()
-            exit()
     except getopt.GetoptError:
         help()
         exit()
@@ -166,14 +177,15 @@ def main(argv):
             filename = arg
         elif opt in ('-o', '--operation'):
             operation = arg
+    
+    (postdir, basefilename) = os.path.split(filename)
     if not os.path.exists(filename):
-        print 'make sure the input file exists! ' + filename
+        print 'The input file does not exist, create one: ' + filename
+        newTemplate(postdir, basefilename)
         exit()
     if operation not in ('new', 'update'):
         print 'The operation "' + operation + '" not supported, current support operations are: "new", "update" !'
         exit()
-    
-    (postdir, basefilename) = os.path.split(filename)
     rawFilename = ''
     for f in os.listdir(postdir):
         if f.startswith(basefilename[:-3]) and len(f) > len(basefilename)+len('.raw.id-')-3:
