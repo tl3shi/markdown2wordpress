@@ -42,7 +42,7 @@ def parseDocument(filename):
     start = False
     config = False
     for i in range(len(lines)):
-        line = lines[i]
+        line = lines[i].strip()
         if config == False:
             if line == '---':
                 if (start == False):
@@ -61,7 +61,7 @@ def parseDocument(filename):
                     printf('config failed! (key, value) = (' + key + ', ' + value + ')\n');exit()
         else: #config ok
             while len(lines[i]) <= 1: #filter first blank lines
-                i++
+                i+=1
             rawcontent = parseMedia(lines[i:])
             rawfilename = filename[:-3] + '.raw.id-'
             open(rawfilename, 'w').writelines(rawcontent)

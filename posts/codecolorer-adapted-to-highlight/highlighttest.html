@@ -1,38 +1,48 @@
 <html>
 <head>
     <!-- 
-    <link rel="stylesheet" href="./highlight.default.min.css">
+    
+    
+     <link rel="stylesheet" href="./highlight.default.min.css">
     <script src="./highlight.min.js"></script>
     <script src="./jquery-2.1.4.min.js"></script>
+
     -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/styles/default.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"></script>
+   <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/styles/default.min.css">
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"></script>
     <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script>
+       <script>
         if(false)
             hljs.initHighlightingOnLoad(); //default tag><pre><code>
         else
         $(document).ready(function() {
             //hljs.configure({useBR: true});//this does NOT work, the original code should contains <br>, see https://github.com/isagalaev/highlight.js/issues/860
-            $('cc').each(function(){
-                $(this).wrap("<pre></pre>");
+            //$('cc').each(function(){
+            //    $(this).wrap("<pre></pre>");
+            //    console.log($(this).html());
                 //var codestr = $(this).html();
                 //$(this).html(codestr.replace(/\n/g, '<br>')); //manually substitute, add <pre>, no need
-            });
-            $('cc').each(function(i, block) {
+            //});
+            $('pre cc').each(function(i, block) {
                 hljs.highlightBlock(block);
             });
         });
     </script>
 </head>
 <body>
-    test0
+    test0<pre>
     <cc lang="php">
     $domain = $_SERVER['HTTP_HOST'];
     if ($domain == 'm.tanglei.name')
-         $_SERVER['HTTP_USER_AGENT']='tanglei'; //跟wptouch admin后台设置的一样即可
-    </cc>
+         $_SERVER['HTTP_USER_AGENT']='tanglei'; //跟wptouch admin后台设置的一样即可 换行貌似有问题
+    <p>
+    $domain = $_SERVER['HTTP_HOST'];
+    if ($domain == 'm.tanglei.name')
+         $_SERVER['HTTP_USER_AGENT']='tanglei';     
+    </p>
+    </cc></pre>
     test1
+    <pre>
     <cc lang="python">
     '''
     Created on Mar 9, 2012
@@ -51,8 +61,13 @@
         t.cal(89)
     except :
         traceback.print_exc()
-    </cc>
+    </cc></pre>
     
+    bug0
+    <pre><cc class="cpp">
+#include <iostream>
+</cc></pre>
+
     the default configuration should not work.
     <pre>
     <code class="php">
@@ -61,5 +76,93 @@
          $_SERVER['HTTP_USER_AGENT']='tanglei'; //跟wptouch admin后台设置的一样即可
     <code>
     </pre>
+    
+    
+    下面代码是wordpress对后台写的文章过滤后的结果。导致```<cc>```选择器选择不正确，代码高亮失败。
+    
+<p>已经从腾讯离职了，今天在学校整理电脑里面的资料，看到了以前写的一篇文章，发到KM里面了，虽然没啥响应的人。我这里还是在blog里记录下(原文含有保密信息，稍稍改下)，给备份一下。下面说说背景：</p>
+<p>网站的服务质量很重要，大型网站为了保证其服务质量，会采取很多措施。比如自动化测试监控等。之前在项目中就负责将一些接口调用状态信息等上报一个统一管理的平台。比如，A接口里面，去调用了B接口，这个B接口有可能是自己项目当中的接口，也有可能是其他项目当中的接口(例如朋友网调用QQ空间的接口)，在调用B接口后，有可能返回失败，这样就得把这个失败信息log下来，上报。方便出问题时定位准确。</p>
+<p>在以前的做法中，这个模块间调用的上报分为如下几个方法:</p>
+<li>tick():调用接口开始，记录调用时间；</li>
+<li>接口调用();</li>
+<li>report():这里就是根据上一步中的结果，确定是到底上报成功，还是失败，或者是超时（只是记录调用完成后的时间，超时等由统一管理的平台配置）</li>
+<p>后来想想，A这个接口去调用B这个接口，却将tick，report这样的方法写在了A里面，然后这些方法跟A这个具体的业务逻辑是没有关系的，代码紧紧耦合在一起，为了解耦和，联想到以前学java时的AOP，于是就搜索了下php中的，后来搜索到php能通过魔术方法实现aop。下面给出我的实现</p>
+<p>具体的业务逻辑类：<br />
+<cc class="php"><br />
+class Biz{  </p>
+<p>    function  add($param){<br />
+        echo &#8216;add&#8217;.$param .&#8221;\t&#8221;;<br />
+        return 0;<br />
+    }<br />
+    function  del($id){<br />
+        echo &#8216;del&#8217; . $id . &#8220;\t&#8221;;<br />
+        return false;<br />
+    }<br />
+    function  getInfo($param){<br />
+        echo &#8216;getInfo&#8217; . $param . &#8220;\t&#8221;;<br />
+        return &#8220;getinfo&#8221;;<br />
+    }  </p>
+<p>}<br />
+</cc><br />
+然后在外面封装一层，将业务逻辑的代码包装起来：<br />
+<cc lang="php"><br />
+//业务逻辑类的包装类<br />
+class AOP<br />
+{<br />
+    private $instance;  </p>
+<p>    public function __construct($instance)<br />
+    {<br />
+        $this->instance = $instance;<br />
+    }  </p>
+<p>    public function __call($method, $argument)<br />
+    {<br />
+        if(! method_exists($this->instance, $method))<br />
+        {<br />
+            throw new Exception(&#8216;未定义的方法：&#8217; . $method);<br />
+        }<br />
+        //模拟tick方法<br />
+        echo &#8216;tick_&#8217; . $method . &#8216;_&#8217;.time(). &#8220;\r\n&#8221;;<br />
+        //调用具体的业务逻辑<br />
+        $callBack = array($this->instance, $method);<br />
+        $return = call_user_func_array($callBack, $argument);<br />
+        //根据实际情况  上报成功或者失败<br />
+        if($return === false)<br />
+        {<br />
+            echo &#8216;report fail&#8217; . &#8220;\r\n&#8221;;<br />
+        }else {<br />
+            echo &#8216;report success&#8217; . &#8220;\r\n&#8221;;<br />
+        }<br />
+        return $return;<br />
+    }<br />
+}<br />
+</cc><br />
+最后有一个统一的工厂去管理所有的业务逻辑代码;<strong>现在代码是这样写的，可以考虑单例之类</strong><br />
+<cc class="php"><br />
+//工厂方法<br />
+class BizFactory<br />
+{<br />
+    public function getBizInstance()<br />
+    {<br />
+        return new AOP(new Biz());<br />
+    }  </p>
+<p>}<br />
+</cc><br />
+然后去调用相关的业务逻辑时，通过这个统一的工厂去调用;<br />
+<cc class="php"><br />
+function doit(){<br />
+    //不同的业务的话也可以利用抽象工厂等设计模式<br />
+    $obj = BizFactory::getBizInstance();<br />
+    //通过类方法去调用<br />
+    $obj->add(1);<br />
+    $obj->del(99);<br />
+    $obj->getInfo(1);<br />
+}<br />
+</cc><br />
+执行一下doit();就有如下的结果;<br />
+<a href="http://s1123.photobucket.com/albums/l549/tl3shi/?action=view&amp;current=aop_php.jpg" target="_blank"><img src="http://i1123.photobucket.com/albums/l549/tl3shi/aop_php.jpg" border="0" alt="aop,php"></a><br />
+<br/><br />
+这样，是业务逻辑和监控上报状态就隔离出来了，实现了代码的解耦和。</p>
+<h3 ><hr size=1 style="border:1 dashed #5151A2">相关文章</h3><ul><li>2012 年 07 月 24 日—《<a href="http://www.tanglei.name/?p=1884" title="python中decorator详解">python中decorator详解</a>》</li><li>2012 年 07 月 23 日—《<a href="http://www.tanglei.name/?p=1881" title="python中的AOP">python中的AOP</a>》</li><li>2012 年 03 月 01 日—《<a href="http://www.tanglei.name/?p=1472" title="php中数组array_merge和运算符加号(+)的区别">php中数组array_merge和运算符加号(+)的区别</a>》</li><li>2012 年 01 月 08 日—《<a href="http://www.tanglei.name/?p=1397" title="PHP哈希表碰撞攻击原理">PHP哈希表碰撞攻击原理</a>》</li><li>2011 年 11 月 17 日—《<a href="http://www.tanglei.name/?p=1286" title="php图片加文字水印(中文乱码解法方案)">php图片加文字水印(中文乱码解法方案)</a>》</li></ul>"
+    
 <body>
 </html>
