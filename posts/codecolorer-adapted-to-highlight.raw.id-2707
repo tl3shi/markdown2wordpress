@@ -36,25 +36,23 @@ codecolorer之前的代码区域基本上都是通过```[cc lang="java"]java cod
        hljs.initHighlightingOnLoad(); //default tag<pre><code>
    else
    	$(document).ready(function() {
-       //hljs.configure({useBR: true});//this does NOT work, the original code should contains <br>, see https://github.com/isagalaev/highlight.js/issues/860
-       $('cc').each(function(){
-           $(this).wrap("<pre></pre>");
+       //hljs.configure({useBR: true});//this does NOT work, the original code should contains <br>, 
+       //see https://github.com/isagalaev/highlight.js/issues/860
+       //$('cc').each(function(){
+       //    $(this).wrap("<pre></pre>"); //db substitute
            //var codestr = $(this).html();
            //$(this).html(codestr.replace(/\n/g, '<br>')); //manually substitute, add <pre>, no need
-       });
-       $('cc').each(function(i, block) {
+       //});
+       $('pre cc').each(function(i, block) {
            hljs.highlightBlock(block);
        });
    });
 </script>
 ```
 
-Demo如下： 
+Demo 见[这里](./codecolorer-adapted-to-highlight/highlighttest.html)。
 
-<iframe src='https://raw.githubusercontent.com/tl3shi/markdown2wordpress/master/posts/codecolorer-adapted-to-highlight/highlighttest.html' width=100%></iframe>
-
-
-然后就是使这些js代码应用到之前的所有文章中，直接添加到每篇含有代码的文章中的正文里容易被wordpress过滤转义掉，且加载的顺序不正确也会导致代码高亮出现问题，如果加在全站的header中有造成不必要的浪费，幸好wordpress提供了给每篇文章自定义的功能，wordpress后台发布文章时有个自定义栏目，可以给每篇文章加个标签，然后wp加载的时候根据这篇文章的标签采用不同的逻辑加载。方法可以参考[在 WordPress 指定页面加载指定 JavaScript 或 CSS 代码](http://loo2k.com/blog/wordpress-page-javascript-css-code/) 
+然后就是使这些js代码应用到之前的所有文章中，直接添加到每篇含有代码的文章中的正文里容易被wordpress过滤转义掉，且加载的顺序不正确也会导致代码高亮出现问题，如果加在全站的header中有造成不必要的浪费，幸好wordpress提供了给每篇文章自定义的功能，wordpress后台发布文章时有个自定义栏目，可以给每篇文章加个标签，然后wp加载的时候根据这篇文章的标签采用不同的逻辑加载。方法可以参考[在 WordPress 指定页面加载指定 JavaScript 或 CSS 代码](http://loo2k.com/blog/wordpress-page-javascript-css-code/)[^1]
 
 最后就是修改那些含有代码的文章，修改```[cc]```标签，给文章添加自定义字段。sql语句如下：
 自定义条目：enable_highlight
@@ -83,13 +81,14 @@ Demo如下：
 mysql replace没有正则匹配，一个一个来了。
 
 ```sql
-UPDATE wp_posts SET post_content = REPLACE( post_content, '[/cc]', '</cc></pre>' ) where ID in (SELECT ID FROM wp_posts WHERE post_content LIKE '%[/cc]%');
+UPDATE wp_posts SET post_content = REPLACE( post_content, '[/cc]', '</cc></pre>' ) where ID in 
+(SELECT ID FROM wp_posts WHERE post_content LIKE '%[/cc]%');
 ```
-当试图用以上sql进行查询更新时，提示 "You can't specify target table 'wp_posts' for update in FROM clause"，因为这样对同一个表操作会冲突，中间加一个临时表解决问题。
+当试图用以上sql进行查询更新时，提示 "You can't specify target table 'wp_posts' for update in FROM clause"，因为这样对同一个表操作会冲突，中间加一个临时表解决问题。[^2]
 
 ```sql
-UPDATE wp_posts SET post_content = REPLACE( post_content, '[/cc]', '</cc></pre>' ) where ID in (SELECT ID FROM 
-(SELECT ID FROM wp_posts WHERE post_content LIKE '%[/cc]%') as tmp);
+UPDATE wp_posts SET post_content = REPLACE( post_content, '[/cc]', '</cc></pre>' ) where ID in 
+(SELECT ID FROM (SELECT ID FROM wp_posts WHERE post_content LIKE '%[/cc]%') as tmp);
 ```
 
 
@@ -131,8 +130,8 @@ UPDATE wp_posts SET post_content = REPLACE( post_content, '<code', '<pre><cc' ) 
 UPDATE wp_posts SET post_content = REPLACE( post_content, '</code>', '</cc></pre>' ) where ID in 
 ( SELECT ID FROM (SELECT ID FROM wp_posts WHERE post_content LIKE '%</code>%') as tmp); /*11*/
 
-UPDATE wp_posts SET post_content = REPLACE( post_content, '[cc lang="sql"]', '<pre><cc class="sql">' ) where ID in ( SELECT ID FROM
-(SELECT ID FROM wp_posts WHERE post_content LIKE '%[cc lang="sql"]%') as tmp); /*5*/
+UPDATE wp_posts SET post_content = REPLACE( post_content, '[cc lang="sql"]', '<pre><cc class="sql">' ) where ID in 
+( SELECT ID FROM (SELECT ID FROM wp_posts WHERE post_content LIKE '%[cc lang="sql"]%') as tmp); /*5*/
 
 UPDATE wp_posts SET post_content = REPLACE( post_content, '[cc lang="c"]', '<pre><cc class="c">' ) where ID 
 in ( SELECT ID FROM (SELECT ID FROM wp_posts WHERE post_content LIKE '%[cc lang="c"]%') as tmp); /*4*/
@@ -150,4 +149,9 @@ SELECT wp_posts.ID, 'enable_highlight',
 <script src="../wp-content/blogresources/highlightconfig/enable_highlight.js"></script>' 
 FROM wp_posts WHERE wp_posts.ID in (SELECT ID FROM wp_posts WHERE wp_posts.post_content LIKE '%</cc></pre>%');
 ```
- 
+
+参考文献：
+
+[^1]: [在 WordPress 指定页面加载指定 JavaScript 或 CSS 代码](http://loo2k.com/blog/wordpress-page-javascript-css-code/) 
+[^2]: [MySQL #1093 - You can't specify target table 'giveaways' for update in FROM clause](http://stackoverflow.com/questions/8333376/mysql-1093-you-cant-specify-target-table-giveaways-for-update-in-from-clau)
+  

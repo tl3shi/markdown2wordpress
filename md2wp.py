@@ -8,6 +8,7 @@ import pandocTool
 import mimetypes
 import re
 import os, sys, getopt
+import webbrowser
 
 def readConfig():
     config = ConfigParser()
@@ -17,9 +18,9 @@ def readConfig():
 
 def initClient():
     config = readConfig()
-    xmlrpc_url = config.get('wordpress', 'url')
+    xmlrpc_url = config.get('wordpress', 'url') + '/xmlrpc.php'
     username = config.get('wordpress', 'username')
-    userid = config.get('wordpress', 'userid')
+    #userid = config.get('wordpress', 'userid')
     return Client(xmlrpc_url, username, config.get('wordpress', 'password'))
 
 def parseMedia(lines):
@@ -93,7 +94,7 @@ def newPost(filename):
     oldRawFilename = filename[:-3] + '.raw.id-'
     newRawFilename = filename[:-3] + '.raw.id-' + str(post.id)
     os.rename(oldRawFilename, newRawFilename)
-    return post.id > 0
+    return post.id 
 
 def editPost(filename, post_id):
     post = parseDocument(filename)
@@ -125,6 +126,11 @@ published: false
 '''
     template = template.replace('url', basename[:-3])
     open( postdir + os.path.sep + basename, 'w').writelines(template[1:])
+
+def openBrowser(post_id):
+    config = readConfig()
+    domain = config.get('wordpress', 'url') 
+    webbrowser.open_new_tab(domain + '/?p=' + str(post_id)+ '&preview=true')
 
 def testConnection():
     client = initClient()
@@ -162,14 +168,15 @@ def testEdit():
     print client.call(posts.EditPost(2659, post))
 
 def help():
-    print 'useage:\n' + 'md2wp.py' + ' -f <postfilename> -o <operation>' + '\t or'
-    print               'md2wp.py' + ' --file=<postfilename> --operation=<operation>'
+    print 'useage:\n' + 'md2wp.py' + ' -f <postfilename> -o <operation> -p' + '\t or'
+    print               'md2wp.py' + ' --file=<postfilename> --operation=<operation> --preview'
 
 def main(argv):
     filename = ''
     operation = ''
+    preview = False
     try:
-        opts, args = getopt.getopt(argv[1:], 'hf:o:', ['help', 'file=', 'operation='])
+        opts, args = getopt.getopt(argv[1:], 'hpf:o:', ['help', 'preview',  'file=', 'operation='])
     except getopt.GetoptError:
         help()
         exit()
@@ -181,34 +188,38 @@ def main(argv):
             filename = arg
         elif opt in ('-o', '--operation'):
             operation = arg
+        elif opt in ('-p', '--preview'):
+            preview = True
     
     (postdir, basefilename) = os.path.split(filename)
     if not os.path.exists(filename):
         print 'The input file does not exist, create one: ' + filename
         newTemplate(postdir, basefilename)
         exit()
-    if operation not in ('new', 'update'):
+    if operation not in ('new', 'update') and preview == False:
         print 'The operation "' + operation + '" not supported, current support operations are: "new", "update" !'
         exit()
     rawFilename = ''
+    post_id = -1 
     for f in os.listdir(postdir):
         if f.startswith(basefilename[:-3]) and len(f) > len(basefilename)+len('.raw.id-')-3:
             rawFilename = postdir + os.path.sep + f
+            post_id = rawFilename[rawFilename.find('.raw.id-')+len('.raw.id-'):]
             break
-    
     if operation == 'new':
         if rawFilename != '':
             print 'The post with same filename has exsisted, make sure the operation is "new" or "update" ? ' + filename
             exit()
-        if newPost(filename):
+        post_id = newPost(filename)
+        if post_id.isdigit():
             print 'Post new successfully !\n'
         else:
             print 'Post failed !\n'
+            exit()
     elif operation == 'update':
         if rawFilename == '':
             print 'make sure the corresponding rawfile exists! \n'
             exit()
-        post_id = rawFilename[rawFilename.find('.raw.id-')+len('.raw.id-'):]
         if not post_id.isdigit():
             print 'make sure the corresponding rawfile exists! \n'
             exit()
@@ -216,7 +227,10 @@ def main(argv):
             print 'Update successfully !\n'
         else:
             print 'Update failed !\n'
-        
+            exit()
+    if preview:
+        openBrowser(post_id)
+
 if __name__ == '__main__':
     if len(sys.argv) <= 1:
         print 'command error! try ' + sys.argv[0] + ' -help\n'
