@@ -1,12 +1,3 @@
----
-title: 将代码高亮插件codecolorer替换为highlight
-permalink: codecolorer-adapted-to-highlight
-layout: post
-tags: 经验技巧 codecolorer highlight 代码高亮 wordpress plugin
-categories: 经验技巧 我做站长 wordpress
-published: false
----
-
 最近在写一个wordpress小的客户端发布工具，就是直接写markdown，然后转为html发布到wordpress，为什么要写?
 
 - 不太想换之前已有的blogs，试过相应的工具将已有的wordpress blog转为markdown，效果不是很好。//直接用github+jekyll之类的静态站点
@@ -60,7 +51,7 @@ codecolorer之前的代码区域基本上都是通过```[cc lang="java"]java cod
 
 Demo如下： 
 
-<iframe src='./codecolorer-adapted-to-highlight/highlighttest.html' width=100%></iframe>
+<iframe src='https://raw.githubusercontent.com/tl3shi/markdown2wordpress/master/posts/codecolorer-adapted-to-highlight/highlighttest.html' width=100%></iframe>
 
 
 然后就是使这些js代码应用到之前的所有文章中，直接添加到每篇含有代码的文章中的正文里容易被wordpress过滤转义掉，且加载的顺序不正确也会导致代码高亮出现问题，如果加在全站的header中有造成不必要的浪费，幸好wordpress提供了给每篇文章自定义的功能，wordpress后台发布文章时有个自定义栏目，可以给每篇文章加个标签，然后wp加载的时候根据这篇文章的标签采用不同的逻辑加载。方法可以参考[在 WordPress 指定页面加载指定 JavaScript 或 CSS 代码](http://loo2k.com/blog/wordpress-page-javascript-css-code/) 

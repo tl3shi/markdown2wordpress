@@ -27,12 +27,16 @@ def parseMedia(lines):
     resourcePrefix = config.get('resource', 'picGithubPrefix')
     reImg = r'!\[[^\\\\]*\]\(\./[^\\\\]*\)'
     reFile= r'\(\.\/[^\\\\]*\)'
+    reSrc = r'src=[\'"]\.\/[^\\\\]*[\'"]'
     content = []
     for line in lines:
         matches = re.findall(reImg, line)
         for pic in matches:
             filename = re.findall(reFile, pic)[0]
             line = line.replace(filename, '(' + resourcePrefix + filename[2:-1] + ')')
+        matches = re.findall(reSrc, line)
+        for src in matches:
+            line = line.replace("./", resourcePrefix)
         content.append(line)
     return content
 
